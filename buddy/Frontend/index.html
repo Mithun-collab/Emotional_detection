@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buddy AI | Mental Health Companion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            height: calc(100vh - 40px);
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 380px;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* Logo */
+        .logo-section {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .logo-icon {
+            font-size: 32px;
+        }
+
+        .logo h1 {
+            font-size: 26px;
+            background: linear-gradient(135deg, #10b981, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Emotion Card */
+        .emotion-card {
+            margin: 20px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 24px;
+            padding: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+
+        .emotion-display {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .emotion-icon {
+            font-size: 56px;
+        }
+
+        .emotion-text {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .confidence-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            margin: 12px 0;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: white;
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .confidence-text {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-bottom: 12px;
+        }
+
+        .advice-text {
+            font-size: 12px;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            line-height: 1.4;
+        }
+
+        /* Stats Card */
+        .stats-card {
+            margin: 0 20px 20px 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 16px;
+        }
+
+        .stats-card h3 {
+            font-size: 14px;
+            margin-bottom: 12px;
+            opacity: 0.8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        /* ==================== CAMERA SECTION - BIG & VISIBLE ==================== */
+        .camera-section {
+            margin: 0 20px 20px 20px;
+            background: #0f172a;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .camera-header {
+            padding: 15px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.5);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .camera-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .camera-title span:first-child {
+            font-size: 20px;
+        }
+
+        /* BIG VISIBLE TOGGLE SWITCH */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #64748b;
+            transition: 0.3s;
+            border-radius: 34px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        .camera-status-badge {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+            font-weight: 500;
+        }
+
+        .video-wrapper {
+            position: relative;
+            aspect-ratio: 4/3;
+            background: #000;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .camera-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .camera-placeholder div {
+            font-size: 48px;
+        }
+
+        .camera-placeholder small {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .camera-tips {
+            padding: 12px;
+            font-size: 12px;
+            text-align: center;
+            background: rgba(0,0,0,0.4);
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Quick Tools */
+        .tools-section {
+            margin: 0 20px 16px 20px;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .tool-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 12px;
+            border-radius: 16px;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tool-btn:hover {
+            background: #6366f1;
+            transform: translateY(-2px);
+        }
+
+        /* Crisis Button */
+        .crisis-btn {
+            margin: 0 20px 24px 20px;
+            background: #ef4444;
+            border: none;
+            padding: 14px;
+            border-radius: 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; background: #dc2626; }
+        }
+
+        /* Main Chat */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+        }
+
+        .chat-header {
+            padding: 20px 28px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .header-actions button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 10px;
+            transition: 0.2s;
+        }
+
+        .header-actions button:hover {
+            background: #f1f5f9;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 28px;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .welcome-avatar {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .welcome-message h3 {
+            font-size: 22px;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .welcome-message p {
+            color: #64748b;
+        }
+
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            background: #6366f1;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot {
+            background: white;
+            color: #1e293b;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .input-area {
+            padding: 20px 28px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            background: #f1f5f9;
+            border-radius: 32px;
+            padding: 8px 8px 8px 20px;
+        }
+
+        textarea {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 12px 0;
+            font-size: 15px;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .send-btn {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 32px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .send-btn:hover {
+            background: #4f46e5;
+        }
+
+        .typing-indicator {
+            margin-top: 12px;
+            margin-left: 12px;
+            font-size: 13px;
+            color: #64748b;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .typing-indicator.visible {
+            opacity: 1;
+        }
+
+        .suggestions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .suggestion {
+            background: #f1f5f9;
+            color: #1e293b;
+            padding: 8px 16px;
+            border-radius: 32px;
+            font-size: 13px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .suggestion:hover {
+            background: #6366f1;
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 32px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #ef4444;
+        }
+
+        .close-btn {
+            font-size: 28px;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .contact-card {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 16px;
+            margin: 12px 0;
+            border-left: 4px solid #ef4444;
+        }
+
+        .contact-card h3 {
+            color: #ef4444;
+            margin-bottom: 8px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo-section">
+                <div class="logo">
+                    <span class="logo-icon">🤗</span>
+                    <h1>Buddy AI</h1>
+                </div>
+                <div class="tagline">Your Mental Health Companion</div>
+            </div>
+
+            <!-- Emotion Card -->
+            <div class="emotion-card">
+                <div class="card-header">
+                    <span>Current Emotion</span>
+                    <span class="live-dot"></span>
+                </div>
+                <div class="emotion-display">
+                    <span class="emotion-icon" id="emotionIcon">😐</span>
+                    <span class="emotion-text" id="emotionText">Detecting...</span>
+                </div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="confidenceFill"></div>
+                </div>
+                <div class="confidence-text" id="confidenceText">Confidence: --</div>
+                <div class="advice-text" id="emotionAdvice">💡 How are you feeling today?</div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-card">
+                <h3>Today's Wellness</h3>
+                <div class="stats-grid">
+                    <div>
+                        <div class="stat-value" id="messageCount">0</div>
+                        <div class="stat-label">Messages</div>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="moodScore">--</div>
+                        <div class="stat-label">Mood Score</div>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="sessionTime">0:00</div>
+                        <div class="stat-label">Session</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== CAMERA SECTION - BIG & VISIBLE ==================== -->
+            <div class="camera-section">
+                <div class="camera-header">
+                    <div class="camera-title">
+                        <span>📷</span>
+                        <span>Camera</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="camera-status-badge" id="cameraStatusBadge">OFF</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="cameraToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="video-wrapper">
+                    <video id="video" autoplay playsinline></video>
+                    <div class="camera-placeholder" id="cameraPlaceholder">
+                        <div>📸</div>
+                        <small>Camera is OFF</small>
+                        <small style="font-size: 10px;">⬅️ Click the toggle switch to turn ON</small>
+                    </div>
+                </div>
+                <div class="camera-tips" id="cameraTips">
+                    💡 Click the green switch to turn camera ON and detect your emotions
+                </div>
+            </div>
+
+            <!-- Quick Tools -->
+            <div class="tools-section">
+                <div class="tools-grid">
+                    <button class="tool-btn" onclick="quickTool('breathe')">🌬️ Breathe</button>
+                    <button class="tool-btn" onclick="quickTool('ground')">🌱 Ground</button>
+                    <button class="tool-btn" onclick="quickTool('gratitude')">🙏 Gratitude</button>
+                    <button class="tool-btn" onclick="quickTool('quote')">✨ Quote</button>
+                </div>
+            </div>
+
+            <!-- Crisis Support -->
+            <button class="crisis-btn" onclick="showCrisisSupport()">
+                🆘 Need Immediate Help?
+            </button>
+        </div>
+
+        <!-- Main Chat -->
+        <div class="main-content">
+            <div class="chat-header">
+                <div>
+                    <span class="status-dot"></span>
+                    <span style="font-weight: 500;">Mental Health Advisor</span>
+                </div>
+                <div class="header-actions">
+                    <button onclick="clearChat()">🗑️</button>
+                    <button onclick="refreshConnection()">🔄</button>
+                </div>
+            </div>
+
+            <div class="chat-container" id="chatContainer">
+                <div class="welcome-message" id="welcomeMessage">
+                    <div class="welcome-avatar">🧠✨</div>
+                    <h3>Hi, I'm Buddy</h3>
+                    <p>Your AI mental health companion. I'm here to listen, support, and help you thrive.</p>
+                </div>
+                <div id="chatbox" class="chat-messages"></div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea id="userInput" placeholder="Type your message..." rows="1"></textarea>
+                    <button class="send-btn" onclick="sendMessage()">Send</button>
+                </div>
+                <div class="typing-indicator" id="typingIndicator">Buddy is typing...</div>
+                <div class="suggestions">
+                    <span class="suggestion" onclick="quickAsk('I feel anxious')">😰 Anxious</span>
+                    <span class="suggestion" onclick="quickAsk('I feel sad')">😢 Sad</span>
+                    <span class="suggestion" onclick="quickAsk('Need motivation')">✨ Motivate</span>
+                    <span class="suggestion" onclick="quickAsk('Self care tip')">🌿 Self-care</span>
+                    <span class="suggestion" onclick="quickAsk('I feel overwhelmed')">😫 Overwhelmed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crisis Modal -->
+    <div class="modal" id="crisisModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚨 You're Not Alone</h2>
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+            </div>
+            <p>If you're having thoughts of harming yourself, please reach out immediately:</p>
+            <div class="contact-card">
+                <h3>🇮🇳 India</h3>
+                <p><strong>iCall:</strong> 9152987821</p>
+                <p><strong>AASRA:</strong> 9820466726</p>
+            </div>
+            <div class="contact-card">
+                <h3>🌍 International</h3>
+                <p><strong>Crisis Lifeline:</strong> 988</p>
+            </div>
+            <p style="text-align: center; margin-top: 20px; color: #ef4444;">You matter. People care about you. 💚</p>
+            <button onclick="closeModal()" style="margin-top: 20px; width: 100%; padding: 12px; background: #6366f1; color: white; border: none; border-radius: 16px; font-weight: 600; cursor: pointer;">I Understand</button>
+        </div>
+    </div>
+
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        // DOM Elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const emotionIcon = document.getElementById('emotionIcon');
+        const emotionText = document.getElementById('emotionText');
+        const emotionAdvice = document.getElementById('emotionAdvice');
+        const confidenceFill = document.getElementById('confidenceFill');
+        const confidenceText = document.getElementById('confidenceText');
+        const cameraToggle = document.getElementById('cameraToggle');
+        const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+        const cameraTips = document.getElementById('cameraTips');
+        const cameraStatusBadge = document.getElementById('cameraStatusBadge');
+        const chatbox = document.getElementById('chatbox');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const userInput = document.getElementById('userInput');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const messageCount = document.getElementById('messageCount');
+        const moodScore = document.getElementById('moodScore');
+        const sessionTime = document.getElementById('sessionTime');
+        const crisisModal = document.getElementById('crisisModal');
+
+        // State
+        let currentEmotion = 'neutral';
+        let messageCounter = 0;
+        let sessionStartTime = Date.now();
+        let cameraActive = false;
+        let emotionInterval = null;
+
+        // Camera Functions
+        async function startCamera() {
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Camera not supported');
+                }
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                cameraActive = true;
+                cameraTips.textContent = '✅ Camera active - Detecting your emotions!';
+                cameraStatusBadge.textContent = 'ON';
+                cameraStatusBadge.style.background = '#10b981';
+                cameraPlaceholder.style.display = 'none';
+                
+                if (emotionInterval) clearInterval(emotionInterval);
+                emotionInterval = setInterval(analyzeEmotion, 3000);
+                console.log('Camera started');
+            } catch (err) {
+                cameraTips.textContent = '❌ Camera error - Check permissions';
+                cameraStatusBadge.textContent = 'ERROR';
+                cameraStatusBadge.style.background = '#ef4444';
+                cameraActive = false;
+                cameraPlaceholder.style.display = 'flex';
+            }
+        }
+
+        function stopCamera() {
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            cameraActive = false;
+            cameraTips.textContent = '📷 Camera off - Toggle switch to enable';
+            cameraStatusBadge.textContent = 'OFF';
+            cameraStatusBadge.style.background = 'rgba(255,255,255,0.2)';
+            cameraPlaceholder.style.display = 'flex';
+            emotionIcon.textContent = '📴';
+            emotionText.textContent = 'Camera Off';
+            if (emotionInterval) clearInterval(emotionInterval);
+            console.log('Camera stopped');
+        }
+
+        // Toggle camera
+        cameraToggle.addEventListener('change', () => {
+            if (cameraToggle.checked) {
+                startCamera();
+            } else {
+                stopCamera();
+            }
+        });
+
+        function captureFrame() {
+            if (!video.videoWidth || !cameraActive) return null;
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            return canvas.toDataURL('image/jpeg');
+        }
+
+        async function analyzeEmotion() {
+            if (!cameraActive || !video.srcObject) return;
+            const imageData = captureFrame();
+            if (!imageData) return;
+
+            try {
+                const res = await fetch('/analyze_emotion', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageData })
+                });
+                const data = await res.json();
+                
+                emotionIcon.textContent = data.emoji || '😐';
+                emotionText.textContent = data.emotion || 'Detecting...';
+                currentEmotion = (data.emotion || 'neutral').toLowerCase();
+                
+                const confidence = data.confidence || 0.8;
+                confidenceFill.style.width = `${confidence * 100}%`;
+                confidenceText.textContent = `Confidence: ${Math.round(confidence * 100)}%`;
+                emotionAdvice.innerHTML = `💡 ${data.advice || 'How can I help you?'}`;
+                
+                const scores = { 'Happy': 85, 'Sad': 35, 'Angry': 25, 'Neutral': 50, 'Surprise': 70, 'Fear': 30 };
+                moodScore.textContent = scores[data.emotion] || '50';
+            } catch (e) {
+                console.log('Waiting for server...');
+            }
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+            
+            welcomeMessage.style.display = 'none';
+            addMessage(text, 'user');
+            userInput.value = '';
+            typingIndicator.classList.add('visible');
+            
+            try {
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, emotion: currentEmotion })
+                });
+                const data = await res.json();
+                typingIndicator.classList.remove('visible');
+                addMessage(data.reply, 'bot');
+                messageCounter++;
+                messageCount.textContent = messageCounter;
+            } catch (err) {
+                typingIndicator.classList.remove('visible');
+                addMessage('⚠️ Server connection issue. Run: python backend/app.py', 'bot');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const msg = document.createElement('div');
+            msg.className = `message ${sender}`;
+            msg.textContent = text;
+            chatbox.appendChild(msg);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        // Quick Functions
+        window.quickTool = (tool) => {
+            const tools = {
+                breathe: 'I need a breathing exercise',
+                ground: 'Help me with grounding technique',
+                gratitude: "Let's do a gratitude exercise",
+                quote: 'Give me a motivational quote'
+            };
+            userInput.value = tools[tool] || '';
+            sendMessage();
+        };
+
+        window.quickAsk = (text) => {
+            userInput.value = text;
+            sendMessage();
+        };
+
+        window.clearChat = () => {
+            chatbox.innerHTML = '';
+            welcomeMessage.style.display = 'block';
+            messageCounter = 0;
+            messageCount.textContent = '0';
+        };
+
+        window.refreshConnection = async () => {
+            try {
+                const res = await fetch('/status');
+                if (res.ok) addMessage('🔄 Connection restored!', 'bot');
+                else addMessage('⚠️ Server error', 'bot');
+            } catch {
+                addMessage('⚠️ Server not running! Start with: python backend/app.py', 'bot');
+            }
+        };
+
+        window.showCrisisSupport = () => crisisModal.style.display = 'flex';
+        window.closeModal = () => crisisModal.style.display = 'none';
+
+        // Session Timer
+        setInterval(() => {
+            const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            sessionTime.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }, 1000);
+
+        // Enter Key
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-resize
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Initialize
+        setTimeout(() => {
+            addMessage('Hi! I\'m Buddy, your mental health advisor. 👋\n\n🔘 **Click the camera toggle switch above** to turn ON your camera. Once on, I can see your emotions and give you personalized support! 🌿', 'bot');
+        }, 500);
+
+        window.addEventListener('click', (e) => {
+            if (e.target === crisisModal) closeModal();
+        });
+
+        console.log('✅ Buddy AI Ready');
+    </script>
+</body>
+</html>
